@@ -1,6 +1,5 @@
 import os
 
-import numpy as np
 import pandas as pd
 
 
@@ -20,8 +19,8 @@ class MainLogic:
             return
         self.csv_file_name = file_name
         self.folder = os.path.dirname(self.csv_file_name)
-        self.df_gaps = pd.read_csv(self.csv_file_name, sep=";", names=["kilometer", "meter", "gap", "file_name"])
-        print(self.df_gaps)
+        self.df_gaps = pd.read_csv(self.csv_file_name, sep=";",
+                                   names=["kilometer", "meter", "gap", "file_name", "x1", "x2", "y1", "y2"])
         return True
 
     def generate_data(self):

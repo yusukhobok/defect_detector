@@ -53,6 +53,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.centralWidget().setLayout(self.vbox)
         self.showMaximized()
 
+        self.rectangle_region = None
+
         self.logic = MainLogic()
 
     def open_avi(self, checked):
@@ -81,12 +83,38 @@ class MainWindow(QtWidgets.QMainWindow):
         img = np.swapaxes(img, 0, 1)
         img = img[:, ::-1, :]
         self.image_item.setImage(img)
-        self.plotArea.setLimits(xMin=0, xMax=img.shape[0], yMin=0, yMax=img.shape[0])
+        # self.plotArea.setLimits(xMin=0, xMax=img.shape[0], yMin=0, yMax=img.shape[0])
 
-    def mouse_clicked(self):
-        pass
+        x1 = self.logic.df_gaps["x1"].values[num]
+        x2 = self.logic.df_gaps["x2"].values[num]
+        y1 = self.logic.df_gaps["y1"].values[num]
+        y2 = self.logic.df_gaps["y2"].values[num]
+        self.draw_regions(x1, x2, y1, y2)
 
-    def mouse_moved(self):
+    def draw_regions(self, x1, x2, y1, y2):
+        color = "r"
+        width = 3
+        style = QtCore.Qt.PenStyle.SolidLine
+        if self.rectangle_region is None:
+            self.rectangle_region = self.plotArea.plot(x=[x1, x1, x2, x2, x1], y=[y1, y2, y2, y1, y1], symbol=None,
+                                                       pen=pg.mkPen(color=color, width=width, style=style))
+        else:
+            self.rectangle_region.setData(x=[x1, x1, x2, x2, x1], y=[y1, y2, y2, y1, y1])
+
+    # self.elements[el].setData(x=[distance0, distance0, distance1, distance1, distance0],
+    #                           y=[height0, height1, height1, height0, height0],
+    #                           pen=pg.mkPen(color=col, width=width, style=style))
+
+    def mouse_clicked(self, evt):
+        pnt = evt.scenePos()
+        pnt = (pnt.x(), pnt.y())
+        mouse_point = self.plotArea.getPlotItem().vb.mapSceneToView(evt.scenePos())
+        x = mouse_point.x()
+        y = mouse_point.y()
+        btn = evt.button()
+        print(x, y)
+
+    def mouse_moved(self, evt):
         pass
 
 
