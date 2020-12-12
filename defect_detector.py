@@ -103,7 +103,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.gaps_model.clear()
         self.logic.filter()
         for i, (index, row) in enumerate(self.logic.filter_df_gaps.iterrows()):
-            item = QtGui.QStandardItem(f"({row['rail']}) {row['kilometer']} км {row['meter']} м: зазор {row['gap']} мм")
+            item = QtGui.QStandardItem(f"({row['rail']}) {row['kilometer']} км {row['meter']} м: зазор {row['gap']} мм (кадр {row['cadr']})")
             item.setEditable(False)
             self.gaps_model.appendRow(item)
             index = self.gaps_model.indexFromItem(item)
@@ -115,11 +115,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.draw_image(num, "file_name", self.image_item)
 
-        x1 = self.logic.filter_df_gaps["x1"].values[num]
-        x2 = self.logic.filter_df_gaps["x2"].values[num]
-        y1 = self.logic.filter_df_gaps["y1"].values[num]
-        y2 = self.logic.filter_df_gaps["y2"].values[num]
-        self.draw_regions(self.plot_area, self.rectangle_region, x1, x2, y1, y2)
+        # x1 = self.logic.filter_df_gaps["x1"].values[num]
+        # x2 = self.logic.filter_df_gaps["x2"].values[num]
+        # y1 = self.logic.filter_df_gaps["y1"].values[num]
+        # y2 = self.logic.filter_df_gaps["y2"].values[num]
+        # self.draw_regions(self.plot_area, self.rectangle_region, x1, x2, y1, y2)
 
     def draw_image(self, num, file_name_key, image_item):
         image_file_name = self.logic.folder + "/" + self.logic.filter_df_gaps[file_name_key].values[num]
@@ -129,15 +129,15 @@ class MainWindow(QtWidgets.QMainWindow):
         image_item.setImage(img)
         # self.plot_area.setLimits(xMin=0, xMax=img.shape[0], yMin=0, yMax=img.shape[0])
 
-    def draw_regions(self, plot_area, rectangle_region, x1, x2, y1, y2):
-        color = "r"
-        width = 3
-        style = QtCore.Qt.PenStyle.SolidLine
-        if rectangle_region is None:
-            rectangle_region = plot_area.plot(x=[x1, x1, x2, x2, x1], y=[y1, y2, y2, y1, y1], symbol=None,
-                                                        pen=pg.mkPen(color=color, width=width, style=style))
-        else:
-            rectangle_region.setData(x=[x1, x1, x2, x2, x1], y=[y1, y2, y2, y1, y1])
+    # def draw_regions(self, plot_area, rectangle_region, x1, x2, y1, y2):
+    #     color = "r"
+    #     width = 3
+    #     style = QtCore.Qt.PenStyle.SolidLine
+    #     if rectangle_region is None:
+    #         rectangle_region = plot_area.plot(x=[x1, x1, x2, x2, x1], y=[y1, y2, y2, y1, y1], symbol=None,
+    #                                                     pen=pg.mkPen(color=color, width=width, style=style))
+    #     else:
+    #         rectangle_region.setData(x=[x1, x1, x2, x2, x1], y=[y1, y2, y2, y1, y1])
 
     def mouse_clicked(self, evt):
         pnt = evt.scenePos()

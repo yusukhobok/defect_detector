@@ -25,8 +25,8 @@ class MainLogic:
         self.csv_file_name = file_name
         self.folder = os.path.dirname(self.csv_file_name)
         self.df_gaps = pd.read_csv(self.csv_file_name, sep=";",
-                                   names=["rail", "kilometer", "meter", "gap", "file_name", "x1", "x2", "y1", "y2"],
-                                   dtype={"rail": str, "kilometer": int, "meter": int, "gap": int, "file_name": str, "x1": int, "x2": int, "y1": int, "y2": int})
+                                   names=["rail", "kilometer", "meter", "gap", "file_name", "cadr"],
+                                   dtype={"rail": str, "kilometer": int, "meter": int, "gap": int, "file_name": str, "cadr": int})
         return True
 
     def filter(self):
