@@ -44,9 +44,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.rail_combo.currentIndexChanged["int"].connect(self.change_rail_combo)
 
         self.hbox_filter = QtWidgets.QHBoxLayout()
-        self.hbox_filter.addWidget(self.info_label)
-        self.hbox_filter.addWidget(self.gap_limit_spinbox)
-        self.hbox_filter.addWidget(self.rail_combo)
+        self.hbox_filter.addWidget(self.info_label, stretch=0)
+        self.hbox_filter.addWidget(self.gap_limit_spinbox, stretch=10)
+        self.hbox_filter.addWidget(self.rail_combo, stretch=10)
 
         self.vbox_data = QtWidgets.QVBoxLayout()
         self.vbox_data.addLayout(self.hbox_filter)
@@ -66,10 +66,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.vbox.addWidget(self.splitter)
         self.setCentralWidget(QtWidgets.QWidget(self))
         self.centralWidget().setLayout(self.vbox)
-        # self.showMaximized()
+        self.showMaximized()
 
         self.rectangle_region = None
-
 
     def create_plot_area(self, plot_area):
         plot_area = pg.PlotWidget()
@@ -99,6 +98,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.refresh_gaps_list()
 
     def refresh_gaps_list(self):
+        if self.logic.df_gaps is None:
+            return
         self.gaps_model.clear()
         self.logic.filter()
         for i, (index, row) in enumerate(self.logic.filter_df_gaps.iterrows()):

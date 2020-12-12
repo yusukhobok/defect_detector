@@ -30,6 +30,8 @@ class MainLogic:
         return True
 
     def filter(self):
+        if self.df_gaps is None:
+            return
         if self.current_rail == "обе нити":
             self.filter_df_gaps = self.df_gaps
         elif self.current_rail == "левая нить":
@@ -37,7 +39,6 @@ class MainLogic:
         elif self.current_rail == "правая нить":
             self.filter_df_gaps = self.df_gaps[self.df_gaps["rail"] == "П"]
         self.filter_df_gaps = self.filter_df_gaps[self.filter_df_gaps["gap"] >= self.gap_limit]
-        print(self.filter_df_gaps)
 
     def generate_data(self):
         pass
