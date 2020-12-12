@@ -2,6 +2,7 @@ import sys
 
 import numpy as np
 import pyqtgraph as pg
+import qdarkstyle
 from matplotlib import image
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QFileDialog
@@ -29,23 +30,26 @@ class MainWindow(QtWidgets.QMainWindow):
         self.gaps_list.pressed["const QModelIndex&"].connect(self.on_select_element)
         self.gaps_list.activated["const QModelIndex&"].connect(self.on_select_element)
 
-        self.plotArea = pg.PlotWidget()
-        self.plotArea.setCursor(QtCore.Qt.CrossCursor)
-        self.plotArea.setMenuEnabled(False)
-        self.plotArea.scene().sigMouseClicked.connect(self.mouse_clicked)
-        self.plotArea.scene().sigMouseMoved.connect(self.mouse_moved)
-        self.plotArea.getPlotItem().getAxis('bottom').enableAutoSIPrefix(False)
-        self.plotArea.getPlotItem().getAxis('left').enableAutoSIPrefix(False)
-        self.plotArea.getPlotItem().hideAxis('bottom')
-        self.plotArea.getPlotItem().hideAxis('left')
-        self.plotArea.setAspectLocked(True)
+        self.rail_combolist = QtWidgets.QComboBox()
+        self.rail_combolist.addItems(["обе нити", "левая нить", "правая нить"])
+
+        self.plot_area = self.create_plot_area(self)
+        # self.plot_area2 = self.create_plot_area(self)
 
         self.image_item = pg.ImageItem()
-        self.plotArea.addItem(self.image_item)
+        self.plot_area.addItem(self.image_item)
+        # self.image_item2 = pg.ImageItem()
+        # self.plot_area2.addItem(self.image_item2)
+
+        self.vbox_data = QtWidgets.QVBoxLayout()
+        self.vbox_data.addWidget(self.gaps_list)
+        self.board_widget = QtWidgets.QWidget()
+        self.board_widget.setLayout(self.vbox_data)
 
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
-        self.splitter.addWidget(self.gaps_list)
-        self.splitter.addWidget(self.plotArea)
+        self.splitter.addWidget(self.board_widget)
+        self.splitter.addWidget(self.plot_area)
+        # self.splitter.addWidget(self.plot_area2)
 
         self.vbox = QtWidgets.QVBoxLayout(self)
         self.vbox.addWidget(self.splitter)
@@ -54,14 +58,33 @@ class MainWindow(QtWidgets.QMainWindow):
         self.showMaximized()
 
         self.rectangle_region = None
+        # self.rectangle_region2 = None
 
         self.logic = MainLogic()
-
+        
+    def create_plot_area(self, plot_area):
+        plot_area = pg.PlotWidget()
+        plot_area.setCursor(QtCore.Qt.CrossCursor)
+        plot_area.setMenuEnabled(False)
+        plot_area.scene().sigMouseClicked.connect(self.mouse_clicked)
+        plot_area.scene().sigMouseMoved.connect(self.mouse_moved)
+        plot_area.getPlotItem().getAxis('bottom').enableAutoSIPrefix(False)
+        plot_area.getPlotItem().getAxis('left').enableAutoSIPrefix(False)
+        plot_area.getPlotItem().hideAxis('bottom')
+        plot_area.getPlotItem().hideAxis('left')
+        plot_area.setAspectLocked(True)
+        return plot_area
+        
     def open_avi(self, checked):
-        pass
+        file_name, _ = QFileDialog.getOpenFileName(parent=self, caption="Открыть AVI файл", filter="AVI (*.avi)",
+                                                   directory="data")
+        if file_name:
+            if self.logic.open_avi(file_name):
+                self.refresh_gaps_list()
 
     def open_csv(self, checked):
-        file_name, _ = QFileDialog.getOpenFileName(parent=self, caption="Открыть CSV файл", filter="CSV (*.csv)")
+        file_name, _ = QFileDialog.getOpenFileName(parent=self, caption="Открыть CSV файл", filter="CSV (*.csv)",
+                                                   directory="data")
         if file_name:
             if self.logic.open_csv(file_name):
                 self.refresh_gaps_list()
@@ -69,7 +92,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def refresh_gaps_list(self):
         self.gaps_model.clear()
         for i, (index, row) in enumerate(self.logic.df_gaps.iterrows()):
-            item = QtGui.QStandardItem(f"{row['kilometer']} км {row['meter']} м: зазор {row['gap']} мм")
+            item = QtGui.QStandardItem(f"({row['rail']}) {row['kilometer']} км {row['meter']} м: зазор {row['gap']} мм")
             item.setEditable(False)
             self.gaps_model.appendRow(item)
             index = self.gaps_model.indexFromItem(item)
@@ -78,28 +101,34 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def on_select_element(self, index):
         num = index.data(QtCore.Qt.UserRole)
-        image_file_name = self.logic.folder + "/" + self.logic.df_gaps["file_name"].values[num]
-        img = image.imread(image_file_name)
-        img = np.swapaxes(img, 0, 1)
-        img = img[:, ::-1, :]
-        self.image_item.setImage(img)
-        # self.plotArea.setLimits(xMin=0, xMax=img.shape[0], yMin=0, yMax=img.shape[0])
+
+        self.draw_image(num, "file_name", self.image_item)
+        # self.draw_image(num, "file_name", self.image_item2)
 
         x1 = self.logic.df_gaps["x1"].values[num]
         x2 = self.logic.df_gaps["x2"].values[num]
         y1 = self.logic.df_gaps["y1"].values[num]
         y2 = self.logic.df_gaps["y2"].values[num]
-        self.draw_regions(x1, x2, y1, y2)
+        self.draw_regions(self.plot_area, self.rectangle_region, x1, x2, y1, y2)
+        # self.draw_regions(self.plot_area2, self.rectangle_region2, x1, x2, y1, y2)
 
-    def draw_regions(self, x1, x2, y1, y2):
+    def draw_image(self, num, file_name_key, image_item):
+        image_file_name = self.logic.folder + "/" + self.logic.df_gaps[file_name_key].values[num]
+        img = image.imread(image_file_name)
+        img = np.swapaxes(img, 0, 1)
+        img = img[:, ::-1, :]
+        image_item.setImage(img)
+        # self.plot_area.setLimits(xMin=0, xMax=img.shape[0], yMin=0, yMax=img.shape[0])
+
+    def draw_regions(self, plot_area, rectangle_region, x1, x2, y1, y2):
         color = "r"
         width = 3
         style = QtCore.Qt.PenStyle.SolidLine
-        if self.rectangle_region is None:
-            self.rectangle_region = self.plotArea.plot(x=[x1, x1, x2, x2, x1], y=[y1, y2, y2, y1, y1], symbol=None,
-                                                       pen=pg.mkPen(color=color, width=width, style=style))
+        if rectangle_region is None:
+            rectangle_region = plot_area.plot(x=[x1, x1, x2, x2, x1], y=[y1, y2, y2, y1, y1], symbol=None,
+                                                        pen=pg.mkPen(color=color, width=width, style=style))
         else:
-            self.rectangle_region.setData(x=[x1, x1, x2, x2, x1], y=[y1, y2, y2, y1, y1])
+            rectangle_region.setData(x=[x1, x1, x2, x2, x1], y=[y1, y2, y2, y1, y1])
 
     # self.elements[el].setData(x=[distance0, distance0, distance1, distance1, distance0],
     #                           y=[height0, height1, height1, height0, height0],
@@ -108,7 +137,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def mouse_clicked(self, evt):
         pnt = evt.scenePos()
         pnt = (pnt.x(), pnt.y())
-        mouse_point = self.plotArea.getPlotItem().vb.mapSceneToView(evt.scenePos())
+        mouse_point = self.plot_area.getPlotItem().vb.mapSceneToView(evt.scenePos())
         x = mouse_point.x()
         y = mouse_point.y()
         btn = evt.button()
@@ -126,10 +155,11 @@ def config_pyqtgraph():
 
 
 if __name__ == "__main__":
-    config_pyqtgraph()
+    # config_pyqtgraph()
     from PyQt5.QtWidgets import QApplication
     QApplication.setAttribute(QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     app = QtWidgets.QApplication(sys.argv)
+    app.setStyleSheet(qdarkstyle.load_stylesheet())
     window = MainWindow()
     window.show()
     app.exec()
