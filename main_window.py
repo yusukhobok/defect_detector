@@ -13,6 +13,9 @@ from main_logic import MainLogic
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         QtWidgets.QMainWindow.__init__(self, parent)
+
+        self.logic = MainLogic()
+
         self.setWindowFlags(QtCore.Qt.Window)
         self.setWindowTitle("Defect Detector")
         self.open_avi_action = QtWidgets.QAction("Open video...")
@@ -30,38 +33,44 @@ class MainWindow(QtWidgets.QMainWindow):
         self.gaps_list.pressed["const QModelIndex&"].connect(self.on_select_element)
         self.gaps_list.activated["const QModelIndex&"].connect(self.on_select_element)
 
-        self.rail_combolist = QtWidgets.QComboBox()
-        self.rail_combolist.addItems(["обе нити", "левая нить", "правая нить"])
+        self.info_label = QtWidgets.QLabel("Мин. зазор, мм")
+        self.gap_limit_spinbox = QtWidgets.QSpinBox()
+        self.gap_limit_spinbox.setRange(0, 1000)
+        self.gap_limit_spinbox.setValue(0)
+        self.gap_limit_spinbox.setSingleStep(1)
+        self.gap_limit_spinbox.valueChanged["int"].connect(self.change_gap_limit)
+        self.rail_combo = QtWidgets.QComboBox()
+        self.rail_combo.addItems(self.logic.RAILS)
+        self.rail_combo.currentIndexChanged["int"].connect(self.change_rail_combo)
 
-        self.plot_area = self.create_plot_area(self)
-        # self.plot_area2 = self.create_plot_area(self)
-
-        self.image_item = pg.ImageItem()
-        self.plot_area.addItem(self.image_item)
-        # self.image_item2 = pg.ImageItem()
-        # self.plot_area2.addItem(self.image_item2)
+        self.hbox_filter = QtWidgets.QHBoxLayout()
+        self.hbox_filter.addWidget(self.info_label)
+        self.hbox_filter.addWidget(self.gap_limit_spinbox)
+        self.hbox_filter.addWidget(self.rail_combo)
 
         self.vbox_data = QtWidgets.QVBoxLayout()
+        self.vbox_data.addLayout(self.hbox_filter)
         self.vbox_data.addWidget(self.gaps_list)
         self.board_widget = QtWidgets.QWidget()
         self.board_widget.setLayout(self.vbox_data)
 
+        self.plot_area = self.create_plot_area(self)
+        self.image_item = pg.ImageItem()
+        self.plot_area.addItem(self.image_item)
+
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         self.splitter.addWidget(self.board_widget)
         self.splitter.addWidget(self.plot_area)
-        # self.splitter.addWidget(self.plot_area2)
 
         self.vbox = QtWidgets.QVBoxLayout(self)
         self.vbox.addWidget(self.splitter)
         self.setCentralWidget(QtWidgets.QWidget(self))
         self.centralWidget().setLayout(self.vbox)
-        self.showMaximized()
+        # self.showMaximized()
 
         self.rectangle_region = None
-        # self.rectangle_region2 = None
 
-        self.logic = MainLogic()
-        
+
     def create_plot_area(self, plot_area):
         plot_area = pg.PlotWidget()
         plot_area.setCursor(QtCore.Qt.CrossCursor)
@@ -91,7 +100,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def refresh_gaps_list(self):
         self.gaps_model.clear()
-        for i, (index, row) in enumerate(self.logic.df_gaps.iterrows()):
+        self.logic.filter()
+        for i, (index, row) in enumerate(self.logic.filter_df_gaps.iterrows()):
             item = QtGui.QStandardItem(f"({row['rail']}) {row['kilometer']} км {row['meter']} м: зазор {row['gap']} мм")
             item.setEditable(False)
             self.gaps_model.appendRow(item)
@@ -103,17 +113,15 @@ class MainWindow(QtWidgets.QMainWindow):
         num = index.data(QtCore.Qt.UserRole)
 
         self.draw_image(num, "file_name", self.image_item)
-        # self.draw_image(num, "file_name", self.image_item2)
 
-        x1 = self.logic.df_gaps["x1"].values[num]
-        x2 = self.logic.df_gaps["x2"].values[num]
-        y1 = self.logic.df_gaps["y1"].values[num]
-        y2 = self.logic.df_gaps["y2"].values[num]
+        x1 = self.logic.filter_df_gaps["x1"].values[num]
+        x2 = self.logic.filter_df_gaps["x2"].values[num]
+        y1 = self.logic.filter_df_gaps["y1"].values[num]
+        y2 = self.logic.filter_df_gaps["y2"].values[num]
         self.draw_regions(self.plot_area, self.rectangle_region, x1, x2, y1, y2)
-        # self.draw_regions(self.plot_area2, self.rectangle_region2, x1, x2, y1, y2)
 
     def draw_image(self, num, file_name_key, image_item):
-        image_file_name = self.logic.folder + "/" + self.logic.df_gaps[file_name_key].values[num]
+        image_file_name = self.logic.folder + "/" + self.logic.filter_df_gaps[file_name_key].values[num]
         img = image.imread(image_file_name)
         img = np.swapaxes(img, 0, 1)
         img = img[:, ::-1, :]
@@ -130,10 +138,6 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             rectangle_region.setData(x=[x1, x1, x2, x2, x1], y=[y1, y2, y2, y1, y1])
 
-    # self.elements[el].setData(x=[distance0, distance0, distance1, distance1, distance0],
-    #                           y=[height0, height1, height1, height0, height0],
-    #                           pen=pg.mkPen(color=col, width=width, style=style))
-
     def mouse_clicked(self, evt):
         pnt = evt.scenePos()
         pnt = (pnt.x(), pnt.y())
@@ -145,6 +149,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def mouse_moved(self, evt):
         pass
+
+    def change_rail_combo(self, value):
+        if value == -1:
+            return
+        self.logic.current_rail = self.logic.RAILS[value]
+        self.refresh_gaps_list()
+
+    def change_gap_limit(self, value):
+        self.logic.gap_limit = int(value)
+        self.refresh_gaps_list()
 
 
 def config_pyqtgraph():
