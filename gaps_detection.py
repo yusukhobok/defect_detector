@@ -4,12 +4,12 @@ from matplotlib import pyplot
 from skimage.filters import sobel, threshold_otsu
 from skimage.color import rgb2gray
 
-IS_PLOT = True
-# IS_PLOT = False
+# IS_PLOT = True
+IS_PLOT = False
 
 SKIPPED_FRAMES_COUNT = 60
 LIMITS = (600, 750)
-THRESH_LIMIT = 8
+THRESH_LIMIT = 5 #8
 MAX_DEVIATION = 500
 GAP_LIMIT = 400 #40
 
@@ -187,7 +187,7 @@ def generate_data(file_name):
             else:
                 counter += 1
 
-            # if counter_all in [ 3086, 3457, 3706, 3845]:
+            # if counter_all in [4541, 4611, 4681, 4751]:
             #     plot(image, gray_image, binary_image_intermediate, binary_image, border, delta_border, min_a, max_a,
             #          min_index, max_index)
         except ValueError:
