@@ -91,9 +91,9 @@ def generate_data(file_name):
     while True:
         try:
             _, image = cap.read()
-            # if counter <= SKIPPED_FRAMES_COUNT:
-            #     counter += 1
-            #     continue
+            if counter <= SKIPPED_FRAMES_COUNT:
+                counter += 1
+                continue
 
             border = None
             for i in range(2):
@@ -124,12 +124,10 @@ def generate_data(file_name):
             thresh = max_a - min_a
 
             if (thresh > THRESH_LIMIT) and (abs(min_a) > THRESH_LIMIT/2) and (max_a > THRESH_LIMIT/2) and (max_index > min_index):
-                counter = 0
                 gap = max_index - min_index
-
                 if gap < GAP_LIMIT:
-                    print(f"gap: {gap}")
-                    # continue
+                    print(f"cadr: {counter}; gap: {gap}")
+                    continue
 
                     pyplot.subplot(1,4,1)
                     pyplot.plot(delta_border, np.arange(binary_image.shape[0]-1))
@@ -150,7 +148,9 @@ def generate_data(file_name):
                     figManager = pyplot.get_current_fig_manager()
                     figManager.window.showMaximized()
                     pyplot.show()
-                    pyplot.close()
+                counter = 0
+
+
             else:
                 counter += 1
         except ValueError:
