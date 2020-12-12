@@ -115,7 +115,6 @@ def generate_data(file_name):
 
                 if gap < GAP_LIMIT:
                     print(f"gap: {gap}")
-                    continue
 
                     pyplot.subplot(1,3,1)
                     pyplot.plot(delta_border, np.arange(binary_image.shape[0]-1))
@@ -138,7 +137,7 @@ def generate_data(file_name):
         except:
             counter += 1
             print("ERROR")
-
     cap.release()
+
 
 generate_data("data\\CAM0.avi")
