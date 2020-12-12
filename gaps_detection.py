@@ -129,7 +129,7 @@ def generate_data(file_name):
 
                 if gap < GAP_LIMIT:
                     print(f"gap: {gap}")
-                    continue
+                    # continue
 
                     pyplot.subplot(1,4,1)
                     pyplot.plot(delta_border, np.arange(binary_image.shape[0]-1))
