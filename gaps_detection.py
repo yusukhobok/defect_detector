@@ -9,9 +9,10 @@ IS_PLOT = False
 
 SKIPPED_FRAMES_COUNT = 60
 LIMITS = (600, 750)
-THRESH_LIMIT = 5 #8
+THRESH_LIMIT = 8
+THRESH_LIMIT_ONE_SIDE = 2
 MAX_DEVIATION = 500
-GAP_LIMIT = 400 #40
+GAP_LIMIT = 50
 
 
 def image_processing(image):
@@ -170,12 +171,12 @@ def generate_data(file_name):
             delta_border = np.diff(border)
             min_a = np.min(delta_border)
             min_index = np.argmin(delta_border)
-            next_part = delta_border[min_index + 1: min(min_index + 100, len(delta_border))]
+            next_part = delta_border[min_index + 1: min(min_index + GAP_LIMIT, len(delta_border))]
             max_a = np.max(next_part)
             max_index = np.argmax(next_part) + min_index+1
             thresh = max_a - min_a
 
-            if (thresh > THRESH_LIMIT) and (abs(min_a) > THRESH_LIMIT/2) and (max_a > THRESH_LIMIT/2) and (max_index > min_index):
+            if (thresh > THRESH_LIMIT) and (abs(min_a) > THRESH_LIMIT_ONE_SIDE) and (max_a > THRESH_LIMIT_ONE_SIDE) and (max_index > min_index):
                 gap = max_index - min_index
                 if gap < GAP_LIMIT:
                     counter_success += 1
@@ -187,7 +188,7 @@ def generate_data(file_name):
             else:
                 counter += 1
 
-            # if counter_all in [4541, 4611, 4681, 4751]:
+            # if counter_all in [8093, 8441, 8580]:
             #     plot(image, gray_image, binary_image_intermediate, binary_image, border, delta_border, min_a, max_a,
             #          min_index, max_index)
         except ValueError:
