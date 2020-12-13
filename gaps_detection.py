@@ -3,9 +3,10 @@ import numpy as np
 from matplotlib import pyplot
 from skimage.filters import sobel, threshold_otsu
 from skimage.color import rgb2gray
+import read_km_m
 
-IS_PLOT = True
-# IS_PLOT = False
+# IS_PLOT = True
+IS_PLOT = False
 
 SKIPPED_FRAMES_COUNT = 60
 LIMITS = (600, 750)
@@ -101,6 +102,7 @@ def find_next_column(binary_image, row, column, current_border):
                 column = old_column
     return column
 
+
 def gen_old(old_column, column, binary_image, row):
     c1 = min(old_column, column)
     c2 = max(old_column, column)
@@ -112,9 +114,10 @@ def gen_old(old_column, column, binary_image, row):
     old = old1 if np.sum(old1) < np.sum(old2) else old2
     return old
 
+
 def plot(image, gray_image, binary_image_intermediate, binary_image, border, delta_border, min_a, max_a, min_index, max_index):
     pyplot.subplot(1, 6, 1)
-    pyplot.imshow(rgb2gray(image[-50: -20, 24: 170]))
+    pyplot.imshow(rgb2gray(image[-50: -20, 24: 155]))
     pyplot.subplot(1, 6, 2)
     pyplot.imshow(gray_image)
     pyplot.subplot(1, 6, 3)
@@ -131,14 +134,23 @@ def plot(image, gray_image, binary_image_intermediate, binary_image, border, del
     pyplot.show()
 
 
-def generate_data(file_name):
+def generate_data(file_name, file_name2):
     cap = cv2.VideoCapture(file_name)
+    cap2 = cv2.VideoCapture(file_name2)
     counter = 0
     counter_success = 0
     counter_all = 0
+
+    kilometer_list = []
+    meter_list = []
+    gap_list = []
+    file_name_list = []
+    cadr_list = []
+
     while True:
         try:
             _, image = cap.read()
+            _, image2 = cap2.read()
             if image is None:
                 break
             counter_all += 1
@@ -186,11 +198,25 @@ def generate_data(file_name):
                     if IS_PLOT:
                         plot(image, gray_image, binary_image_intermediate, binary_image, border, delta_border, min_a,
                              max_a, min_index, max_index)
+                    km, m = read_km_m.get_coordinates_of_frame(image)
+
+                    kilometer_list.append(km)
+                    meter_list.append(m)
+                    gap_list.append(gap)
+                    file_name_list.append(f"{counter_all}.jpg")
+                    cadr_list.append(counter_all)
+                    duo_image = np.concatenate((image, image2), axis=1)
+                    cv2.imwrite(f"data2\\{counter_all}.jpg", duo_image)
+                    cv2.line(duo_image, (0, min_index), (1024 * 2, min_index), (0, 0, 255), 2)
+                    cv2.line(duo_image, (0, max_index), (1024 * 2, max_index), (0, 0, 255), 2)
+                    cv2.imwrite(f"data\\{counter_all}.jpg", duo_image)
+                    # if counter_success > 10:
+                    #     break
                 counter = 0
             else:
                 counter += 1
 
-            # if counter_all in [8093, 8441, 8580]:
+            # if counter_all in [642, ]:
             #     plot(image, gray_image, binary_image_intermediate, binary_image, border, delta_border, min_a, max_a,
             #          min_index, max_index)
         except ValueError:
@@ -198,4 +224,9 @@ def generate_data(file_name):
             print("ERROR")
     cap.release()
 
-generate_data("data\\CAM0.avi")
+    import pandas as pd
+    df = pd.DataFrame({"rail": "Л", "km": kilometer_list, "m": meter_list, "gap": gap_list, "file_name": file_name_list, "cadr": cadr_list})
+    df.to_csv(f"data\\{file_name}_data.csv", sep=";", index=False, header=False)
+
+if __name__ == "__main__":
+    generate_data("data\\CAM0.avi", "data\\CAM1.avi")

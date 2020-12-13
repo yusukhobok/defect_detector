@@ -8,6 +8,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QFileDialog
 
 from main_logic import MainLogic
+import gaps_detection
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -88,6 +89,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                    directory="data")
         if file_name:
             if self.logic.open_avi(file_name):
+                gaps_detection.generate_data(file_name)
                 self.refresh_gaps_list()
 
     def open_csv(self, checked):
