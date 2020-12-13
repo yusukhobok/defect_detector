@@ -7,7 +7,8 @@ class MainLogic:
     def __init__(self):
         self.df_gaps = None
         self.filter_df_gaps = None
-        self.avi_file_name = None
+        self.avi_file_name1 = None
+        self.avi_file_name2 = None
         self.csv_file_name = None
         self.folder = None
 
@@ -15,9 +16,11 @@ class MainLogic:
         self.current_rail = "обе нити"
         self.gap_limit = 0
 
-    def open_avi(self, file_name):
-        self.avi_file_name = file_name
-        self.generate_data()
+    def open_avi(self, file_name1, file_name2, cadr_count):
+        self.avi_file_name1 = file_name1
+        self.avi_file_name2 = file_name2
+        csv_file_name = self.generate_data(cadr_count)
+        return csv_file_name
 
     def open_csv(self, file_name):
         if not os.path.exists(file_name):
@@ -40,5 +43,6 @@ class MainLogic:
             self.filter_df_gaps = self.df_gaps[self.df_gaps["rail"] == "П"]
         self.filter_df_gaps = self.filter_df_gaps[self.filter_df_gaps["gap"] >= self.gap_limit]
 
-    def generate_data(self):
-        pass
+    def generate_data(self, cadr_count):
+        from gaps_detection import generate_data
+        return generate_data(self.avi_file_name1, self.avi_file_name2, cadr_count)

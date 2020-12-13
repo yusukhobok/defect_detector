@@ -134,7 +134,7 @@ def plot(image, gray_image, binary_image_intermediate, binary_image, border, del
     pyplot.show()
 
 
-def generate_data(file_name, file_name2):
+def generate_data(file_name, file_name2, cadr_count):
     cap = cv2.VideoCapture(file_name)
     cap2 = cv2.VideoCapture(file_name2)
     counter = 0
@@ -210,8 +210,10 @@ def generate_data(file_name, file_name2):
                     cv2.line(duo_image, (0, min_index), (1024 * 2, min_index), (0, 0, 255), 2)
                     cv2.line(duo_image, (0, max_index), (1024 * 2, max_index), (0, 0, 255), 2)
                     cv2.imwrite(f"data\\{counter_all}.jpg", duo_image)
-                    # if counter_success > 10:
-                    #     break
+
+                    if cadr_count != 0:
+                        if counter_success >= cadr_count:
+                            break
                 counter = 0
             else:
                 counter += 1
@@ -226,7 +228,9 @@ def generate_data(file_name, file_name2):
 
     import pandas as pd
     df = pd.DataFrame({"rail": "Л", "km": kilometer_list, "m": meter_list, "gap": gap_list, "file_name": file_name_list, "cadr": cadr_list})
-    df.to_csv(f"data\\{file_name}_data.csv", sep=";", index=False, header=False)
+    df.to_csv(f"{file_name}_data.csv", sep=";", index=False, header=False)
+    return f"{file_name}_data.csv"
+
 
 if __name__ == "__main__":
     generate_data("data\\CAM0.avi", "data\\CAM1.avi")

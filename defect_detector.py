@@ -59,9 +59,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.image_item = pg.ImageItem()
         self.plot_area.addItem(self.image_item)
 
+        self.plot_area_nn = self.create_plot_area(self)
+        self.image_item_nn = pg.ImageItem()
+        self.plot_area_nn.addItem(self.image_item_nn)
+
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         self.splitter.addWidget(self.board_widget)
-        self.splitter.addWidget(self.plot_area)
+        self.splitter2 = QtWidgets.QSplitter(QtCore.Qt.Vertical)
+        self.splitter2.addWidget(self.plot_area)
+        self.splitter2.addWidget(self.plot_area_nn)
+        self.splitter.addWidget(self.splitter2)
 
         self.vbox = QtWidgets.QVBoxLayout(self)
         self.vbox.addWidget(self.splitter)
@@ -85,11 +92,20 @@ class MainWindow(QtWidgets.QMainWindow):
         return plot_area
         
     def open_avi(self, checked):
-        file_name, _ = QFileDialog.getOpenFileName(parent=self, caption="Открыть AVI файл", filter="AVI (*.avi)",
-                                                   directory="data")
-        if file_name:
-            if self.logic.open_avi(file_name):
-                gaps_detection.generate_data(file_name)
+        file_name1, _ = QFileDialog.getOpenFileName(parent=self, caption="Открыть первый AVI файл", filter="AVI (*.avi)",
+                                                    directory="data")
+        file_name2, _ = QFileDialog.getOpenFileName(parent=self, caption="Открыть второй AVI файл", filter="AVI (*.avi)",
+                                                    directory="data")
+        cadr_count, _ = QtWidgets.QInputDialog.getInt(self, "Defect Detector", "Остановиться после N стыков:")
+        if file_name1 and file_name2:
+            from splash import Splash
+            splash = Splash()
+            splash.set_message("Поиск")
+            csv_file_name = self.logic.open_avi(file_name1, file_name2, cadr_count)
+            splash.close_message(self)
+            print(csv_file_name)
+            if csv_file_name:
+                self.logic.open_csv(csv_file_name)
                 self.refresh_gaps_list()
 
     def open_csv(self, checked):
