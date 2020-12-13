@@ -96,8 +96,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                                     directory="data")
         file_name2, _ = QFileDialog.getOpenFileName(parent=self, caption="Открыть второй AVI файл", filter="AVI (*.avi)",
                                                     directory="data")
-        cadr_count, _ = QtWidgets.QInputDialog.getInt(self, "Defect Detector", "Остановиться после N стыков:")
-        if file_name1 and file_name2:
+        cadr_count, ok = QtWidgets.QInputDialog.getInt(self, "Defect Detector", "Остановиться после N стыков:")
+        if file_name1 and file_name2 and ok:
             from splash import Splash
             splash = Splash()
             splash.set_message("Поиск")
@@ -130,14 +130,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def on_select_element(self, index):
         num = index.data(QtCore.Qt.UserRole)
-
         self.draw_image(num, "file_name", self.image_item)
-
-        # x1 = self.logic.filter_df_gaps["x1"].values[num]
-        # x2 = self.logic.filter_df_gaps["x2"].values[num]
-        # y1 = self.logic.filter_df_gaps["y1"].values[num]
-        # y2 = self.logic.filter_df_gaps["y2"].values[num]
-        # self.draw_regions(self.plot_area, self.rectangle_region, x1, x2, y1, y2)
+        self.draw_image_nn(num, "file_name", self.image_item_nn)
 
     def draw_image(self, num, file_name_key, image_item):
         image_file_name = self.logic.folder + "/" + self.logic.filter_df_gaps[file_name_key].values[num]
@@ -145,17 +139,14 @@ class MainWindow(QtWidgets.QMainWindow):
         img = np.swapaxes(img, 0, 1)
         img = img[:, ::-1, :]
         image_item.setImage(img)
-        # self.plot_area.setLimits(xMin=0, xMax=img.shape[0], yMin=0, yMax=img.shape[0])
 
-    # def draw_regions(self, plot_area, rectangle_region, x1, x2, y1, y2):
-    #     color = "r"
-    #     width = 3
-    #     style = QtCore.Qt.PenStyle.SolidLine
-    #     if rectangle_region is None:
-    #         rectangle_region = plot_area.plot(x=[x1, x1, x2, x2, x1], y=[y1, y2, y2, y1, y1], symbol=None,
-    #                                                     pen=pg.mkPen(color=color, width=width, style=style))
-    #     else:
-    #         rectangle_region.setData(x=[x1, x1, x2, x2, x1], y=[y1, y2, y2, y1, y1])
+    def draw_image_nn(self, num, file_name_key, image_item):
+        image_file_name = self.logic.folder + "//data_nn//" + self.logic.filter_df_gaps[file_name_key].values[num]
+        img = image.imread(image_file_name)
+        img = np.swapaxes(img, 0, 1)
+        img = img[:, ::-1, :]
+        image_item.setImage(img)
+
 
     def mouse_clicked(self, evt):
         pnt = evt.scenePos()
