@@ -4,8 +4,8 @@ from matplotlib import pyplot
 from skimage.filters import sobel, threshold_otsu
 from skimage.color import rgb2gray
 
-# IS_PLOT = True
-IS_PLOT = False
+IS_PLOT = True
+# IS_PLOT = False
 
 SKIPPED_FRAMES_COUNT = 60
 LIMITS = (600, 750)
@@ -139,6 +139,8 @@ def generate_data(file_name):
     while True:
         try:
             _, image = cap.read()
+            if image is None:
+                break
             counter_all += 1
             if counter <= SKIPPED_FRAMES_COUNT:
                 counter += 1
