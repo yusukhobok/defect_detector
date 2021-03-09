@@ -13,7 +13,7 @@ LIMITS = (600, 750)
 THRESH_LIMIT = 8
 THRESH_LIMIT_ONE_SIDE = 2
 MAX_DEVIATION = 500
-GAP_LIMIT = 50
+GAP_LIMIT = 35
 
 
 def image_processing(image):
@@ -199,21 +199,21 @@ def generate_data(file_name, file_name2, cadr_count):
                         plot(image, gray_image, binary_image_intermediate, binary_image, border, delta_border, min_a,
                              max_a, min_index, max_index)
                     km, m = read_km_m.get_coordinates_of_frame(image)
+                    if 0 <= int(m) < 1000:
+                        kilometer_list.append(km)
+                        meter_list.append(m)
+                        gap_list.append(gap)
+                        file_name_list.append(f"{counter_all}.jpg")
+                        cadr_list.append(counter_all)
+                        duo_image = np.concatenate((image, image2), axis=1)
+                        cv2.imwrite(f"data2\\{counter_all}.jpg", duo_image)
+                        cv2.line(duo_image, (0, min_index), (1024 * 2, min_index), (0, 0, 255), 2)
+                        cv2.line(duo_image, (0, max_index), (1024 * 2, max_index), (0, 0, 255), 2)
+                        cv2.imwrite(f"data\\{counter_all}.jpg", duo_image)
 
-                    kilometer_list.append(km)
-                    meter_list.append(m)
-                    gap_list.append(gap)
-                    file_name_list.append(f"{counter_all}.jpg")
-                    cadr_list.append(counter_all)
-                    duo_image = np.concatenate((image, image2), axis=1)
-                    cv2.imwrite(f"data2\\{counter_all}.jpg", duo_image)
-                    cv2.line(duo_image, (0, min_index), (1024 * 2, min_index), (0, 0, 255), 2)
-                    cv2.line(duo_image, (0, max_index), (1024 * 2, max_index), (0, 0, 255), 2)
-                    cv2.imwrite(f"data\\{counter_all}.jpg", duo_image)
-
-                    if cadr_count != 0:
-                        if counter_success >= cadr_count:
-                            break
+                        if cadr_count != 0:
+                            if counter_success >= cadr_count:
+                                break
                 counter = 0
             else:
                 counter += 1
